@@ -124,3 +124,289 @@ $ rspec spec/models/post_spec.rb
 Finished in 0.019 seconds (files took 6.87 seconds to load)
 2 examples, 0 failures
 ```
+
+Write unit test
+
+```ruby
+it "assigns [my_post] to @posts" do
+  get :index
+  expect(assigns(:posts:)).to eq([my_post])
+end
+```
+
+Run rspec posts_controller_spec.rb
+
+```
+$ rspec spec/controllers/posts_controller_spec.rb
+.F
+
+Failures:
+
+  1) PostsController GET #index assigns [my_post] to @posts
+     Failure/Error: expect(assigns(:posts)).to eq([my_post])
+     NameError:
+       undefined local variable or method `my_post' for #<RSpec::ExampleGroups::PostsController::GETIndex:0x57bc4d8>
+     # ./spec/controllers/posts_controller_spec.rb:14:in `block (3 levels) in <top (required)>'
+
+Finished in 0.026 seconds (files took 6.84 seconds to load)
+2 examples, 1 failure
+
+Failed examples:
+
+rspec ./spec/controllers/posts_controller_spec.rb:11 # PostsController GET #index assigns [my_post] to @posts
+```
+
+Write code to pass unit test
+
+```ruby
+my_post = Post.create!(title: "Title", body: "Body")
+```
+
+Run rspec posts_controller_spec.rb
+
+```
+$ rspec spec/controllers/posts_controller_spec.rb
+.F
+
+Failures:
+
+  1) PostsController GET #index assigns [my_post] to @posts
+     Failure/Error: expect(assigns(:posts)).to eq([my_post])
+
+       expected: [#<Post id: 1, title: "Title", body: "Body", created_at: "2015-10-02 05:03:33", updated_at: "2015-10-02 05:03:33">]
+            got: nil
+
+       (compared using ==)
+     # ./spec/controllers/posts_controller_spec.rb:14:in `block (3 levels) in <top (required)>'
+
+Finished in 0.16001 seconds (files took 6.92 seconds to load)
+2 examples, 1 failure
+
+Failed examples:
+
+rspec ./spec/controllers/posts_controller_spec.rb:11 # PostsController GET #index assigns [my_post] to @posts
+```
+
+Write code in app/controllers/posts_controller.rb
+
+```ruby
+def index
+  @posts = Post.all
+end
+```
+
+Run rspec posts_controller_spec.rb
+
+```
+$ rspec spec/controllers/posts_controller_spec.rb
+..
+
+Finished in 0.044 seconds (files took 6.85 seconds to load)
+2 examples, 0 failures
+```
+
+Write unit test
+
+```ruby
+it "renders the #new view" do
+  expect(response).to render_template :new
+end
+```
+
+Run RSpec
+
+```
+$ rspec spec/controllers/posts_controller_spec.rb
+...F
+
+Failures:
+
+  1) PostsController GET #new renders the #new view
+     Failure/Error: expect(response).to render_template :new
+       expecting <"new"> but rendering with <[]>
+     # ./spec/controllers/posts_controller_spec.rb:25:in `block (3 levels) in <top (required)>'
+
+Finished in 0.086 seconds (files took 6.85 seconds to load)
+4 examples, 1 failure
+
+Failed examples:
+
+rspec ./spec/controllers/posts_controller_spec.rb:24 # PostsController GET #new renders the #new view
+```
+
+Write code to pass unit test
+
+```ruby
+get :new
+```
+
+Run RSpec
+
+```
+$ rspec spec/controllers/posts_controller_spec.rb
+....
+
+Finished in 0.063 seconds (files took 6.81 seconds to load)
+4 examples, 0 failures
+```
+
+Write unit test
+
+```ruby
+it "instantiates @post" do
+  expect(assigns(:post)).not_to be_nil
+end
+```
+
+Run RSpec
+
+```
+$ rspec spec/controllers/posts_controller_spec.rb
+....F
+
+Failures:
+
+  1) PostsController GET #new instantiates @post
+     Failure/Error: expect(assigns(:post)).not_to be_nil
+       expected: not nil
+            got: nil
+     # ./spec/controllers/posts_controller_spec.rb:30:in `block (3 levels) in <top (required)>'
+
+Finished in 0.09301 seconds (files took 6.99 seconds to load)
+5 examples, 1 failure
+
+Failed examples:
+
+rspec ./spec/controllers/posts_controller_spec.rb:29 # PostsController GET #new instantiates @post
+```
+
+Write code to pass unit test
+
+```ruby
+get :new
+```
+
+Run RSpec
+
+```
+$ rspec spec/controllers/posts_controller_spec.rb
+....F
+
+Failures:
+
+  1) PostsController GET #new instantiates @post
+     Failure/Error: expect(assigns(:post)).not_to be_nil
+       expected: not nil
+            got: nil
+     # ./spec/controllers/posts_controller_spec.rb:31:in `block (3 levels) in <top (required)>'
+
+Finished in 0.09101 seconds (files took 7.04 seconds to load)
+5 examples, 1 failure
+
+Failed examples:
+
+rspec ./spec/controllers/posts_controller_spec.rb:29 # PostsController GET #new instantiates @post
+```
+
+Write code in posts_controller.rb
+
+```ruby
+def new
+  @post = Post.new
+end
+```
+
+Run RSpec
+
+```
+$ rspec spec/controllers/posts_controller_spec.rb
+.....
+
+Finished in 0.065 seconds (files took 6.82 seconds to load)
+5 examples, 0 failures
+```
+
+Write unit test
+
+```ruby
+it "renders the show view" do
+  expect(response).to render_template :show
+end
+```
+
+Run RSpec
+
+```
+$ rspec spec/controllers/posts_controller_spec.rb
+......F
+
+Failures:
+
+  1) PostsController GET #show renders the show view
+     Failure/Error: expect(response).to render_template :show
+       expecting <"show"> but rendering with <[]>
+     # ./spec/controllers/posts_controller_spec.rb:58:in `block (3 levels) in <top (required)>'
+
+Finished in 0.10001 seconds (files took 7.28 seconds to load)
+7 examples, 1 failure
+
+Failed examples:
+
+rspec ./spec/controllers/posts_controller_spec.rb:57 # PostsController GET #show renders the show view
+```
+
+Write code to make unit test pass
+
+```ruby
+get :show
+```
+
+Run RSpec
+
+```
+$ rspec spec/controllers/posts_controller_spec.rb
+.......
+
+Finished in 0.07601 seconds (files took 7.19 seconds to load)
+7 examples, 0 failures
+```
+
+Write unit test
+
+```ruby
+it "assigns my_post to @post" do
+  expect(assigns(:post)).to eq(my_post)
+end
+```
+
+Run RSpec
+
+```
+$ rspec spec/controllers/posts_controller_spec.rb
+.......F
+
+Failures:
+
+  1) PostsController GET #show assigns my_post to @post
+     Failure/Error: expect(assigns(:post)).to eq(my_post)
+     NameError:
+       undefined local variable or method `my_post' for #<RSpec::ExampleGroups::PostsController::GETShow:0x55b8eb0>
+     # ./spec/controllers/posts_controller_spec.rb:63:in `block (3 levels) in <top (required)>'
+
+Finished in 0.081 seconds (files took 7.32 seconds to load)
+8 examples, 1 failure
+
+Failed examples:
+
+rspec ./spec/controllers/posts_controller_spec.rb:62 # PostsController GET #show assigns my_post to @post
+```
+
+Write code to pass unit test
+
+```ruby
+get :show
+```
+
+Run RSpec
+
+```
