@@ -1,0 +1,126 @@
+Write unit test in post_spec.rb
+
+```ruby
+RSpec.describe Post, type: :model do
+
+  describe "attributes" do
+    it "should respond to title" do
+      expect(post).to respond_to(:title)
+    end
+  end
+
+end
+```
+
+Run rspec post_spec.rb
+
+```
+$ rspec spec/models/post_spec.rb
+F
+
+Failures:
+
+  1) Post attributes should respond to title
+     Failure/Error: expect(post).to respond_to(:title)
+     NameError:
+       undefined local variable or method `post' for #<RSpec::ExampleGroups::Post::Attributes:0x44cac00>
+     # ./spec/models/post_spec.rb:7:in `block (3 levels) in <top (required)>'
+
+Finished in 0.003 seconds (files took 6.92 seconds to load)
+1 example, 1 failure
+
+Failed examples:
+
+rspec ./spec/models/post_spec.rb:6 # Post attributes should respond to title
+```
+
+Added code below, to make failing test, pass
+
+```ruby
+post = Post.create!(title: "Title")
+```
+
+Run rspec post_spec.rb
+
+```
+$ rspec spec/models/post_spec.rb
+.
+
+Finished in 0.022 seconds (files took 6.84 seconds to load)
+1 example, 0 failures
+```
+
+Wrote unit test in post_spec.rb
+
+```ruby
+it "should respond to body" do
+  expect(post).to respond_to(:body)
+end
+```
+
+Run rspec post_spec.rb
+
+```
+$ rspec spec/models/post_spec.rb
+.F
+
+Failures:
+
+  1) Post attributes should respond to body
+     Failure/Error: expect(post).to respond_to(:body)
+     NameError:
+       undefined local variable or method `post' for #<RSpec::ExampleGroups::Post::Attributes:0x571e6f0>
+     # ./spec/models/post_spec.rb:12:in `block (3 levels) in <top (required)>'
+
+Finished in 0.018 seconds (files took 6.82 seconds to load)
+2 examples, 1 failure
+
+Failed examples:
+
+rspec ./spec/models/post_spec.rb:11 # Post attributes should respond to body
+```
+
+Write code to make failing unit test, pass
+
+```ruby
+post = Post.create!(body: "Body")
+```
+
+Run rspec post_spec.rb
+
+```
+$ rspec spec/models/post_spec.rb
+..
+
+Finished in 0.019 seconds (files took 6.8 seconds to load)
+2 examples, 0 failures
+```
+
+Refactor
+
+```ruby
+RSpec.describe Post, type: :model do
+  let(:post) { Post.create!(title: "Title", body: "Body") }
+
+  describe "attributes" do
+    it "should respond to title" do
+      expect(post).to respond_to(:title)
+    end
+
+    it "should respond to body" do
+      expect(post).to respond_to(:body)
+    end
+  end
+
+end
+```
+
+Run rspec post_spec.rb
+
+```
+$ rspec spec/models/post_spec.rb
+..
+
+Finished in 0.019 seconds (files took 6.87 seconds to load)
+2 examples, 0 failures
+```

@@ -1,16 +1,23 @@
 source 'https://rubygems.org'
 
-
+#<<<<<<< HEAD
+ruby '1.9.3'
+#=======
+# Ruby version
+#ruby '2.0.0'
+#>>>>>>> checkpoint-25-staticpages
 # Bundle edge Rails instead: gem 'rails', github: 'rails/rails'
 gem 'rails', '4.2.4'
 # Use sqlite3 as the database for Active Record
-gem 'sqlite3'
+# gem 'sqlite3'
+gem 'pg'
 # Use SCSS for stylesheets
 gem 'sass-rails', '~> 5.0'
 # Use Uglifier as compressor for JavaScript assets
 gem 'uglifier', '>= 1.3.0'
 # Use CoffeeScript for .coffee assets and views
 gem 'coffee-rails', '~> 4.1.0'
+gem 'coffee-script-source', '1.8.0'
 # See https://github.com/rails/execjs#readme for more supported runtimes
 # gem 'therubyracer', platforms: :ruby
 
@@ -34,13 +41,30 @@ gem 'sdoc', '~> 0.4.0', group: :doc
 
 group :development, :test do
   # Call 'debugger' anywhere in the code to stop execution and get a debugger console
-  gem 'debugger'
+#  gem 'debugger'
+  gem 'rspec-rails', '~> 3.0'
+#  gem 'shoulda-matchers'
 end
 
 group :development do
   # Access an IRB console on exception pages or by using <%= console %> in views
   gem 'web-console', '~> 2.0'
+  gem 'sqlite3'
+  gem 'pry-rails'
 end
+
+group :production do
+  gem 'pg'
+  gem 'rails_12factor'
+end
+
+#group :development do
+#  gem 'sqlite3'
+#  gem 'pry-rails'
+#end
 
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem
 gem 'tzinfo-data', platforms: [:mingw, :mswin, :x64_mingw, :jruby]
+
+gem 'bootstrap-sass'
+# The End
