@@ -1,6 +1,10 @@
 # TDD Workflow [Red, Green, Refactor]
 
+
+
 ## Model Testing
+
+# Test
 
 Write unit test for title attribute for post_spec.rb model
 
@@ -8,14 +12,16 @@ Write unit test for title attribute for post_spec.rb model
 RSpec.describe Post, type: :model do
   describe "attributes" do
     it "should respond to title" do
-      expect(post).to respond_to(:title)
+      post = Post.create(title: "Title") # should fail due to no post class.
     end
   end
 end
 ```
 
-Run rspec post_spec.rb
+# Failure
 
+Run rspec post_spec.rb
+# Update error message (should be missing post class)
 ```
 $ rspec spec/models/post_spec.rb
 F
@@ -38,15 +44,13 @@ rspec ./spec/models/post_spec.rb:6 # Post attributes should respond to title
 
 Write `let(:post) { Post.create!(title: "Title") }` inside title attribute unit test to make failing test for undefined local variable post, pass, in post_spec.rb model
 
-```ruby
-describe "attributes" do
-  it "should respond to title" do
-    let(:post) { Post.create!(title: "Title") }
+# Implementation
 
-    expect(post).to respond_to(:title)
-  end
-end
+```ruby
+rails g model post title:string
 ```
+
+# Pass
 
 Run rspec post_spec.rb
 
@@ -65,15 +69,17 @@ RSpec.describe Post, type: :model do
   describe "attributes" do
     ...
 
-    it "should respond to body" do
-      expect(post).to respond_to(:body)
+    it "#title" do
+      post = Post.create(title: "some title")
+    
+      expect(post.title).to respond_to("some title")
     end
   end
 end
 ```
 
 Run rspec post_spec.rb
-
+# should pass due to implementation
 ```
 $ rspec spec/models/post_spec.rb
 .F
@@ -102,9 +108,8 @@ RSpec.describe Post, type: :model do
     ...
 
     it "should respond to body" do
-      let(:post) { Post.create!(body: "Body") }
+      post = Post.create(body: "some body")
 
-      expect(post).to respond_to(:body)
     end
   end
 end
@@ -112,7 +117,7 @@ end
 ```
 
 Run rspec post_spec.rb
-
+# should fail due to no body attribute
 ```
 $ rspec spec/models/post_spec.rb
 ..
@@ -121,31 +126,15 @@ Finished in 0.019 seconds (files took 6.8 seconds to load)
 2 examples, 0 failures
 ```
 
-Refactor post variable in post_spec.rb model
+# write a migration file for body
 
 ```ruby
-RSpec.describe Post, type: :model do
-  let(:post) { Post.create!(title: "Title", body: "Body") }
-
-  describe "attributes" do
-    ...
-
-    it "should respond to body" do
-      expect(post).to respond_to(:body)
-    end
-  end
-end
+rails g migration add_body_to_posts body:string
 ```
 
-Run rspec post_spec.rb to confirm tests still pass after refactoring
+# run rspec
 
-```
-$ rspec spec/models/post_spec.rb
-..
-
-Finished in 0.019 seconds (files took 6.87 seconds to load)
-2 examples, 0 failures
-```
+# should pass
 
 ---
 ## Controller Testing
@@ -219,6 +208,7 @@ RSpec.describe PostsController, type: :controller do
   end
 end
 ```
+# should fail due to no controller index action
 
 Run rspec posts_controller_spec.rb
 
