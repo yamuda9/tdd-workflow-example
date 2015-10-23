@@ -1,14 +1,16 @@
-Write unit test in post_spec.rb
+# TDD Workflow [Red, Green, Refactor]
+
+## Model Testing
+
+Write unit test for title attribute for post_spec.rb model
 
 ```ruby
 RSpec.describe Post, type: :model do
-
   describe "attributes" do
     it "should respond to title" do
       expect(post).to respond_to(:title)
     end
   end
-
 end
 ```
 
@@ -34,10 +36,16 @@ Failed examples:
 rspec ./spec/models/post_spec.rb:6 # Post attributes should respond to title
 ```
 
-Added code below, to make failing test, pass, in post_spec.rb
+Write `let(:post) { Post.create!(title: "Title") }` inside title attribute unit test to make failing test for undefined local variable post, pass, in post_spec.rb model
 
 ```ruby
-post = Post.create!(title: "Title")
+describe "attributes" do
+  it "should respond to title" do
+    let(:post) { Post.create!(title: "Title") }
+
+    expect(post).to respond_to(:title)
+  end
+end
 ```
 
 Run rspec post_spec.rb
@@ -50,11 +58,17 @@ Finished in 0.022 seconds (files took 6.84 seconds to load)
 1 example, 0 failures
 ```
 
-Write unit test in post_spec.rb
+Write unit test for body attribute in post_spec.rb model
 
 ```ruby
-it "should respond to body" do
-  expect(post).to respond_to(:body)
+RSpec.describe Post, type: :model do
+  describe "attributes" do
+    ...
+
+    it "should respond to body" do
+      expect(post).to respond_to(:body)
+    end
+  end
 end
 ```
 
@@ -80,10 +94,21 @@ Failed examples:
 rspec ./spec/models/post_spec.rb:11 # Post attributes should respond to body
 ```
 
-Write code to make failing unit test, pass, in post_spec.rb
+Write `let(:post) { Post.create!(body: "Body") }` inside body attribute unit test to make failing test for undefined local variable post, pass, in post_spec.rb
 
 ```ruby
-post = Post.create!(body: "Body")
+RSpec.describe Post, type: :model do
+  describe "attributes" do
+    ...
+
+    it "should respond to body" do
+      let(:post) { Post.create!(body: "Body") }
+
+      expect(post).to respond_to(:body)
+    end
+  end
+end
+
 ```
 
 Run rspec post_spec.rb
@@ -96,26 +121,23 @@ Finished in 0.019 seconds (files took 6.8 seconds to load)
 2 examples, 0 failures
 ```
 
-Refactor in post_spec.rb
+Refactor post variable in post_spec.rb model
 
 ```ruby
 RSpec.describe Post, type: :model do
   let(:post) { Post.create!(title: "Title", body: "Body") }
 
   describe "attributes" do
-    it "should respond to title" do
-      expect(post).to respond_to(:title)
-    end
+    ...
 
     it "should respond to body" do
       expect(post).to respond_to(:body)
     end
   end
-
 end
 ```
 
-Run rspec post_spec.rb
+Run rspec post_spec.rb to confirm tests still pass after refactoring
 
 ```
 $ rspec spec/models/post_spec.rb
@@ -125,12 +147,140 @@ Finished in 0.019 seconds (files took 6.87 seconds to load)
 2 examples, 0 failures
 ```
 
-Write unit test for index in posts_controller_spec.rb
+---
+## Controller Testing
+
+Write unit test for `GET #index` in posts_controller_spec.rb
 
 ```ruby
-it "assigns [my_post] to @posts" do
-  get :index
-  expect(assigns(:posts:)).to eq([my_post])
+require 'rails_helper'
+
+RSpec.describe PostsController, type: :controller do
+  describe "GET #index" do
+    it "returns http success" do
+      get :index
+    end
+  end
+end
+```
+
+Run rspec posts_controller_spec.rb
+
+```
+$ rspec spec/controllers
+F
+
+Failures:
+
+  1) PostsController GET #index returns http success
+     Failure/Error: get :index
+     ActionController::UrlGenerationError:
+       No route matches {:action=>"index", :controller=>"posts"}
+     # ./spec/controllers/posts_controller_spec.rb:11:in `block (3 levels) in <top (required)>'
+
+Finished in 0.14701 seconds (files took 8.01 seconds to load)
+1 example, 1 failure
+
+Failed examples:
+
+rspec ./spec/controllers/posts_controller_spec.rb:10 # PostsController GET #index returns http success
+```
+
+Input `get "posts" => "posts#index"` route in routes.rb to make failing test for no route matches, pass
+
+```ruby
+Rails.application.routes.draw do
+  get "posts" => "posts#index"
+end
+
+```
+
+Run rspec posts_controller_spec.rb
+
+```
+$ rspec spec/controllers
+.
+
+Finished in 0.27102 seconds (files took 7.92 seconds to load)
+1 example, 0 failures
+```
+
+Write test expecting response to have http status of success for GET #index in posts_controller_spec.rb
+
+```ruby
+require 'rails_helper'
+
+RSpec.describe PostsController, type: :controller do
+  describe "GET #index" do
+    it "returns http success" do
+      get :index
+      expect(response).to have_http_status(:success)
+    end
+  end
+end
+```
+
+Run rspec posts_controller_spec.rb
+
+```
+$ rspec spec/controllers
+.
+
+Finished in 0.32702 seconds (files took 8.06 seconds to load)
+1 example, 0 failures
+```
+
+Write unit test `assigns [post] to @posts` for GET #index in posts_controller_spec.rb
+
+```ruby
+RSpec.describe PostsController, type: :controller do
+  describe "GET #index" do
+    ...
+
+    it "assigns [post] to @posts" do
+      expect(assigns(:posts)).to eq([@post])
+    end
+  end
+end
+```
+
+Run rspec posts_controller_spec.rb
+
+```
+$ rspec spec/controllers
+.F
+
+Failures:
+
+  1) PostsController GET #index assigns [post] to @posts
+     Failure/Error: expect(assigns(:posts)).to eq([@post])
+
+       expected: [nil]
+            got: nil
+
+       (compared using ==)
+     # ./spec/controllers/posts_controller_spec.rb:18:in `block (3 levels) in <top (required)>'
+
+Finished in 0.59803 seconds (files took 8 seconds to load)
+2 examples, 1 failure
+
+Failed examples:
+
+rspec ./spec/controllers/posts_controller_spec.rb:15 # PostsController GET #index assigns [post] to @posts
+```
+
+Write `get :index` "in assigns [post] to @posts" test for GET #index in posts_controller_spec.rb
+
+```ruby
+RSpec.describe PostsController, type: :controller do
+  describe "GET #index" do
+    ...
+
+    it "assigns [post] to @posts" do
+      get :index
+      expect(assigns(:posts)).to eq([@post])
+    end
+  end
 end
 ```
 
@@ -142,10 +292,10 @@ $ rspec spec/controllers/posts_controller_spec.rb
 
 Failures:
 
-  1) PostsController GET #index assigns [my_post] to @posts
-     Failure/Error: expect(assigns(:posts)).to eq([my_post])
+  1) PostsController GET #index assigns [post] to @posts
+     Failure/Error: expect(assigns(:posts)).to eq([post])
      NameError:
-       undefined local variable or method `my_post' for #<RSpec::ExampleGroups::PostsController::GETIndex:0x57bc4d8>
+       undefined local variable or method `post' for #<RSpec::ExampleGroups::PostsController::GETIndex:0x57bc4d8>
      # ./spec/controllers/posts_controller_spec.rb:14:in `block (3 levels) in <top (required)>'
 
 Finished in 0.026 seconds (files took 6.84 seconds to load)
@@ -153,13 +303,23 @@ Finished in 0.026 seconds (files took 6.84 seconds to load)
 
 Failed examples:
 
-rspec ./spec/controllers/posts_controller_spec.rb:11 # PostsController GET #index assigns [my_post] to @posts
+rspec ./spec/controllers/posts_controller_spec.rb:11 # PostsController GET #index assigns [post] to @posts
 ```
 
 Write code to pass index unit test in post_controller_spec.rb
 
 ```ruby
-my_post = Post.create!(title: "Title", body: "Body")
+RSpec.describe PostsController, type: :controller do
+  describe "GET #index" do
+    ...
+
+    it "assigns [post] to @posts" do
+      get :index
+      @post = Post.create!(title: "Title", body: "Body")
+      expect(assigns(:posts)).to eq([@post])
+    end
+  end
+end
 ```
 
 Run RSpec posts_controller_spec.rb
@@ -170,8 +330,8 @@ $ rspec spec/controllers/posts_controller_spec.rb
 
 Failures:
 
-  1) PostsController GET #index assigns [my_post] to @posts
-     Failure/Error: expect(assigns(:posts)).to eq([my_post])
+  1) PostsController GET #index assigns [post] to @posts
+     Failure/Error: expect(assigns(:posts)).to eq([post])
 
        expected: [#<Post id: 1, title: "Title", body: "Body", created_at: "2015-10-02 05:03:33", updated_at: "2015-10-02 05:03:33">]
             got: nil
@@ -187,11 +347,13 @@ Failed examples:
 rspec ./spec/controllers/posts_controller_spec.rb:11 # PostsController GET #index assigns [my_post] to @posts
 ```
 
-Write code in app/controllers/posts_controller.rb
+Define `index` method in app/controllers/posts_controller.rb
 
 ```ruby
-def index
-  @posts = Post.all
+class PostsController < ApplicationController
+  def index
+    @posts = Post.all
+  end
 end
 ```
 
@@ -205,11 +367,92 @@ Finished in 0.044 seconds (files took 6.85 seconds to load)
 2 examples, 0 failures
 ```
 
-Write unit test for new in post_controller_spec.rb
+Write unit test for #new in post_controller_spec.rb
 
 ```ruby
-it "renders the #new view" do
-  expect(response).to render_template :new
+RSpec.describe PostsController, type: :controller do
+  ...
+
+  describe "GET #new" do
+    it "returns http success" do
+      get :new
+    end
+  end
+end
+```
+
+Run RSpec posts_controller_spec.rb
+
+```
+$ rspec spec/controllers
+..F
+
+Failures:
+
+  1) PostsController GET #new returns http success
+     Failure/Error: get :new
+     ActionController::UrlGenerationError:
+       No route matches {:action=>"new", :controller=>"posts"}
+     # ./spec/controllers/posts_controller_spec.rb:23:in `block (3 levels) in <top (required)>'
+
+Finished in 0.44002 seconds (files took 7.99 seconds to load)
+3 examples, 1 failure
+
+Failed examples:
+
+rspec ./spec/controllers/posts_controller_spec.rb:22 # PostsController GET #new returns http success
+```
+
+Input `get "posts/new" => "posts#new"` route in routes.rb to make failing test for no route matches, pass
+
+```ruby
+Rails.application.routes.draw do
+  get "posts" => "posts#index"
+  get "posts/new" => "posts#new"
+end
+
+```
+
+Run RSpec posts_controller_spec.rb
+
+```
+$ rspec spec/controllers
+...
+
+Finished in 0.43102 seconds (files took 7.98 seconds to load)
+3 examples, 0 failures
+```
+
+Write test expecting response to have http status of success for GET #new in posts_controller_spec.rb
+
+```ruby
+describe "GET #new" do
+  it "returns http success" do
+    get :new
+    expect(response).to have_http_status(:success)
+  end
+end
+```
+
+Run RSpec posts_controller_spec.rb
+
+```
+$ rspec spec/controllers
+...
+
+Finished in 0.48903 seconds (files took 8.35 seconds to load)
+3 examples, 0 failures
+```
+
+Write test expecting to render template for new in post_controller_spec.rb
+
+```ruby
+describe "GET #new" do
+  ...
+
+  it "renders the #new view" do
+    expect(response).to render_template :new
+  end
 end
 ```
 
@@ -234,10 +477,17 @@ Failed examples:
 rspec ./spec/controllers/posts_controller_spec.rb:24 # PostsController GET #new renders the #new view
 ```
 
-Write code to pass unit test in post_controller_spec.rb
+Write call for `get :new` in unit test for GET #new in post_controller_spec.rb
 
 ```ruby
-get :new
+describe "GET #new" do
+  ...
+
+  it "renders the #new view" do
+    get :new
+    expect(response).to render_template :new
+  end
+end
 ```
 
 Run RSpec posts_controller_spec.rb
@@ -250,11 +500,15 @@ Finished in 0.063 seconds (files took 6.81 seconds to load)
 4 examples, 0 failures
 ```
 
-Write unit test for new in post_controller_spec.rb
+Write test expecting assigning post to not be nil for new in post_controller_spec.rb
 
 ```ruby
-it "instantiates @post" do
-  expect(assigns(:post)).not_to be_nil
+describe "GET #new" do
+  ...
+
+  it "instantiates @post" do
+    expect(assigns(:post)).not_to be_nil
+  end
 end
 ```
 
@@ -280,10 +534,17 @@ Failed examples:
 rspec ./spec/controllers/posts_controller_spec.rb:29 # PostsController GET #new instantiates @post
 ```
 
-Write code to pass unit test in post_controller_spec.rb
+Write call for `get :new` in unit test for GET #new in post_controller_spec.rb
 
 ```ruby
-get :new
+describe "GET #new" do
+  ...
+
+  it "instantiates @post" do
+    get :new
+    expect(assigns(:post)).not_to be_nil
+  end
+end
 ```
 
 Run RSpec posts_controller_spec.rb
@@ -308,11 +569,17 @@ Failed examples:
 rspec ./spec/controllers/posts_controller_spec.rb:29 # PostsController GET #new instantiates @post
 ```
 
-Write code to pass unit test in posts_controller.rb
+Define `new` method in posts_controller.rb
 
 ```ruby
-def new
-  @post = Post.new
+class PostsController < ApplicationController
+  def index
+    @posts = Post.all
+  end
+
+  def new
+    @post = Post.new
+  end
 end
 ```
 
@@ -326,11 +593,50 @@ Finished in 0.065 seconds (files took 6.82 seconds to load)
 5 examples, 0 failures
 ```
 
-Write unit test for create in post_controller_spec.rb
+Write unit test expecting post count to change by 1 when creating new post in post_controller_spec.rb
 
 ```ruby
-it "increases the number of Post by 1" do
-  expect{post :create, post: {title: "Title", body: "Body"}}.to change(Post,:count).by(1)
+RSpec.describe PostsController, type: :controller do
+  ...
+
+  describe "GET #create" do
+    it "increases the number of Post by 1" do
+      expect{post :create, post: {title: "Title", body: "Body"}}.to change(Post,:count).by(1)
+    end
+  end
+end
+```
+
+Run RSpec posts_controller_spec.rb
+
+```
+$ rspec spec/controllers
+.....F
+
+Failures:
+
+  1) PostsController GET #create increases the number of Post by 1
+     Failure/Error: expect{post :create, post: {title: "Title", body: "Body"}}.to change(Post,:count).by(1)
+     ActionController::UrlGenerationError:
+       No route matches {:action=>"create", :controller=>"posts", :post=>{:title=>"Title", :body=>"Body"}}
+     # ./spec/controllers/posts_controller_spec.rb:40:in `block (4 levels) in <top (required)>'
+     # ./spec/controllers/posts_controller_spec.rb:40:in `block (3 levels) in <top (required)>'
+
+Finished in 0.73504 seconds (files took 8.16 seconds to load)
+6 examples, 1 failure
+
+Failed examples:
+
+rspec ./spec/controllers/posts_controller_spec.rb:39 # PostsController GET #create increases the number of Post by 1
+```
+
+Input `post "posts" => "posts#create"` route in routes.rb to make failing test for no route matches, pass
+
+```ruby
+Rails.application.routes.draw do
+  get  "posts" => "posts#index"
+  get  "posts/new" => "posts#new"
+  post "posts" => "posts#create"
 end
 ```
 
@@ -355,30 +661,83 @@ Failed examples:
 rspec ./spec/controllers/posts_controller_spec.rb:39 # PostsController GET #create increases the number of Post by 1
 ```
 
-Write code to pass unit test in posts_controller.rb
+Define create method in posts_controller.rb
 
 ```ruby
-def create
-  @post = Post.new
-  @post.title = params[:post][:title]
-  @post.body = params[:post][:body]
+class PostsController < ApplicationController
+  ...
 
-  if @post.save
-    flash[:notice] = "Post was saved."
-    redirect_to @post
-  else
-    flash[:error] = "There was an error saving the post. Please try again."
-    render :new
+  def create
+    @post = Post.new
+    @post.title = params[:post][:title]
+    @post.body = params[:post][:body]
+
+    if @post.save
+      flash[:notice] = "Post was saved."
+      redirect_to @post
+    else
+      flash[:error] = "There was an error saving the post. Please try again."
+      render :new
+    end
   end
 end
 ```
 
-Write unit test in post_controller_spec.rb
+Run RSpec posts_controller_spec.rb
+
+```
+$ rspec spec/controllers
+.....F
+
+Failures:
+
+  1) PostsController GET #create increases the number of Post by 1
+     Failure/Error: expect{post :create, post: {title: "Title", body: "Body"}}.to change(Post,:count).by(1)
+     NoMethodError:
+       undefined method `post_url' for #<PostsController:0x000000078bbad0>
+     # ./app/controllers/posts_controller.rb:17:in `create'
+     # ./spec/controllers/posts_controller_spec.rb:40:in `block (4 levels) in <top (required)>'
+     # ./spec/controllers/posts_controller_spec.rb:40:in `block (3 levels) in <top (required)>'
+
+Finished in 0.58703 seconds (files took 8.03 seconds to load)
+6 examples, 1 failure
+
+Failed examples:
+
+rspec ./spec/controllers/posts_controller_spec.rb:39 # PostsController GET #create increases the number of Post by 1
+```
+
+Input `get  "posts/:id" => "posts#show", as: "post"` route in routes.rb to make failing test for no route matches, pass
 
 ```ruby
-it "assigns the new post to @post" do
-  post :create, post: {title: "Title", body: "Body"}
-  expect(assigns(:post)).to eq Post.last
+Rails.application.routes.draw do
+  get  "posts" => "posts#index"
+  get  "posts/new" => "posts#new"
+  post "posts" => "posts#create"
+  get  "posts/:id" => "posts#show", as: "post"
+end
+```
+
+Run RSpec posts_controller_spec.rb
+
+```
+$ rspec spec/controllers
+......
+
+Finished in 0.50403 seconds (files took 8.1 seconds to load)
+6 examples, 0 failures
+```
+
+Write test expecting assigning post to equal last post in post_controller_spec.rb
+
+```ruby
+describe "GET #create" do
+  ...
+
+  it "assigns the new post to @post" do
+    post :create, post: {title: "Title", body: "Body"}
+    expect(assigns(:post)).to eq Post.last
+  end
 end
 ```
 
@@ -395,9 +754,13 @@ Finished in 0.13001 seconds (files took 7.12 seconds to load)
 Write unit test in post_controller_spec.rb
 
 ```ruby
-it "redirects to the new post" do
-  post :create, post: {title: "Title", body: "Body"}
-  expect(response).to redirect_to Post.last
+describe "GET #create" do
+  ...
+
+  it "redirects to the new post" do
+    post :create, post: {title: "Title", body: "Body"}
+    expect(response).to redirect_to Post.last
+  end
 end
 ```
 
@@ -411,11 +774,17 @@ Finished in 0.14301 seconds (files took 7.11 seconds to load)
 8 examples, 0 failures
 ```
 
-Write unit test for show in post_controller_spec.rb
+Write unit test expecting response to have http status of success for show in post_controller_spec.rb
 
 ```ruby
-it "renders the show view" do
-  expect(response).to render_template :show
+RSpec.describe PostsController, type: :controller do
+  ...
+
+  describe "GET #show" do
+    it "returns http success" do
+      expect(response).to have_http_status(:success)
+    end
+  end
 end
 ```
 
@@ -440,169 +809,311 @@ Failed examples:
 rspec ./spec/controllers/posts_controller_spec.rb:57 # PostsController GET #show renders the show view
 ```
 
-Write code to make unit test pass in post_controller_spec.rb
+Write call to `get :show` to make unit test pass in post_controller_spec.rb
 
 ```ruby
-get :show
-```
-
-Run RSpec posts_controller_spec.rb
-
-```
-$ rspec spec/controllers/posts_controller_spec.rb
-.......
-
-Finished in 0.07601 seconds (files took 7.19 seconds to load)
-7 examples, 0 failures
-```
-
-Write unit test in post_controller_spec.rb
-
-```ruby
-it "assigns my_post to @post" do
-  expect(assigns(:post)).to eq(@post)
+describe "GET #show" do
+  it "returns http success" do
+    get :show
+    expect(response).to have_http_status(:success)
+  end
 end
 ```
 
 Run RSpec posts_controller_spec.rb
 
 ```
-$ rspec spec/controllers/posts_controller_spec.rb
-..........F
-
-Failures:
-
-  1) PostsController GET #show assigns my_post to @post
-     Failure/Error: expect(assigns(:post)).to eq(@post)
-
-       expected: #<Post id: 11, title: "title", body: "body", created_at: "2015-10-04 00:31:40", updated_at: "2015-10-04 00:31:40">
-            got: nil
-
-       (compared using ==)
-     # ./spec/controllers/posts_controller_spec.rb:67:in `block (3 levels) in <top (required)>'
-
-Finished in 0.21701 seconds (files took 7.16 seconds to load)
-11 examples, 1 failure
-
-Failed examples:
-
-rspec ./spec/controllers/posts_controller_spec.rb:65 # PostsController GET #show assigns my_post to @post
-```
-
-Write code to pass unit test in posts_controller.rb
-
-```ruby
-def show
-  @post = Post.find(params[:id])
-end
-```
-
-```ruby
-get :show, {id: @post.id}
-```
-
-Run RSpec posts_controller_spec.rb
-
-```
-$ rspec spec/controllers/posts_controller_spec.rb
-...........
-
-Finished in 0.19901 seconds (files took 7.2 seconds to load)
-11 examples, 0 failures
-
-```
-
-Write unit test for edit in post_controller_spec.rb
-
-```ruby
-it "returns http success" do
-  get :edit
-  expect(response).to have_http_status(:success)
-end
-```
-
-Run RSpec posts_controller_spec.rb
-
-```
-$ rspec spec/controllers/posts_controller_spec.rb
+$ rspec spec/controllers
 ........F
 
 Failures:
 
-  1) PostsController GET #edit returns http success
-     Failure/Error: get :edit
+  1) PostsController GET #show returns http success
+     Failure/Error: get :show
      ActionController::UrlGenerationError:
-       No route matches {:action=>"edit", :controller=>"posts"}
-     # ./spec/controllers/posts_controller_spec.rb:74:in `block (3 levels) in <top (required)>'
+       No route matches {:action=>"show", :controller=>"posts"}
+     # ./spec/controllers/posts_controller_spec.rb:56:in `block (3 levels) in <top (required)>'
 
-Finished in 0.16701 seconds (files took 7.22 seconds to load)
+Finished in 0.81805 seconds (files took 7.96 seconds to load)
 9 examples, 1 failure
 
 Failed examples:
 
-rspec ./spec/controllers/posts_controller_spec.rb:73 # PostsController GET #edit returns http success
+rspec ./spec/controllers/posts_controller_spec.rb:55 # PostsController GET #show returns http success
 ```
 
-Write code to pass unit test in posts_controller.rb
+Input `get  "posts" => "posts#show"` route in routes.rb to make failing test for no route matches, pass
 
 ```ruby
-def edit
-  @post = Post.find(params[:id])
+Rails.application.routes.draw do
+  get  "posts" => "posts#index"
+  get  "posts/new" => "posts#new"
+  post "posts" => "posts#create"
+  get  "posts/:id" => "posts#show", as: "post"
+  get  "posts" => "posts#show"
 end
 ```
 
 Run RSpec posts_controller_spec.rb
 
 ```
-$ rspec spec/controllers/posts_controller_spec.rb
+$ rspec spec/controllers
 ........F
 
 Failures:
 
-  1) PostsController GET #edit returns http success
-     Failure/Error: get :edit
+  1) PostsController GET #show returns http success
+     Failure/Error: get :show
      ActiveRecord::RecordNotFound:
        Couldn't find Post with 'id'=
-     # ./app/controllers/posts_controller.rb:29:in `edit'
-     # ./spec/controllers/posts_controller_spec.rb:74:in `block (3 levels) in <top (required)>'
+     # ./app/controllers/posts_controller.rb:25:in `show'
+     # ./spec/controllers/posts_controller_spec.rb:56:in `block (3 levels) in <top (required)>'
 
-Finished in 0.16701 seconds (files took 7.33 seconds to load)
+Finished in 0.70204 seconds (files took 8.13 seconds to load)
 9 examples, 1 failure
 
 Failed examples:
 
-rspec ./spec/controllers/posts_controller_spec.rb:73 # PostsController GET #edit returns http success
+rspec ./spec/controllers/posts_controller_spec.rb:55 # PostsController GET #show returns http success
 ```
 
-Add id in post_controller_spec.rb
+Associate id with post.id in unit test in post_controller_spec.rb
 
 ```ruby
-get :edit, {id: @post.id}
+describe "GET #show" do
+  it "returns http success" do
+    get :show, {id: @post.id}
+    expect(response).to have_http_status(:success)
+  end
+end
 ```
 
 Run RSpec posts_controller_spec.rb
 
 ```
-$ rspec spec/controllers/posts_controller_spec.rb
+$ rspec spec/controllers
 .........
 
-Finished in 0.17401 seconds (files took 7.18 seconds to load)
+Finished in 0.65304 seconds (files took 8.15 seconds to load)
+9 examples, 0 failures
+```
+
+Refactor routes.rb by removing `get  "posts" => "posts#show"`
+
+```ruby
+Rails.application.routes.draw do
+#  resources :posts
+  get  "posts" => "posts#index"
+  get  "posts/new" => "posts#new"
+  post "posts" => "posts#create"
+  get  "posts/:id" => "posts#show", as: "post"
+end
+```
+
+Run RSpec posts_controller_spec.rb to confirm test still passes
+
+```
+$ rspec spec/controllers
+.........
+
+Finished in 0.81805 seconds (files took 8.09 seconds to load)
 9 examples, 0 failures
 ```
 
 Write unit test in post_controller_spec.rb
 
 ```ruby
-it "renders the edit view" do
-  expect(response).to render_template :edit
+describe "GET #show" do
+  ...
+
+  it "renders the show view" do
+    expect(response).to render_template :show
+  end
 end
 ```
 
 Run RSpec posts_controller_spec.rb
 
 ```
-$ rspec spec/controllers/posts_controller_spec.rb
+$ rspec spec/controllers
 .........F
+
+Failures:
+
+  1) PostsController GET #show renders the show view
+     Failure/Error: expect(response).to render_template :show
+       expecting <"show"> but rendering with <[]>
+     # ./spec/controllers/posts_controller_spec.rb:62:in `block (3 levels) in <top (required)>'
+
+Finished in 0.85005 seconds (files took 8.04 seconds to load)
+10 examples, 1 failure
+
+Failed examples:
+
+rspec ./spec/controllers/posts_controller_spec.rb:60 # PostsController GET #show renders the show view
+```
+
+Write call to `get :show` with association to id to make unit test pass in post_controller_spec.rb
+
+```ruby
+describe "GET #show" do
+  ...
+
+  it "renders the show view" do
+    get :show, {id: @post.id}
+    expect(response).to render_template :show
+  end
+end
+```
+
+Run RSpec posts_controller_spec.rb
+
+```
+$ rspec spec/controllers
+..........
+
+Finished in 0.67104 seconds (files took 8.2 seconds to load)
+10 examples, 0 failures
+```
+
+Write unit test expecting assigning post equals to @post for show in post_controller_spec.rb
+
+```ruby
+describe "GET #show" do
+  ...
+
+  it "assigns post to @post" do
+    expect(assigns(:post)).to eq(@post)
+  end
+end
+```
+
+Run RSpec posts_controller_spec.rb
+
+```
+$ rspec spec/controllers
+..........F
+
+Failures:
+
+  1) PostsController GET #show assigns post to @post
+     Failure/Error: expect(assigns(:post)).to eq(@post)
+
+       expected: #<Post id: 11, title: "title", body: "body", created_at: "2015-10-23 06:37:42", updated_at: "2015-10-23 06:37:42">
+            got: nil
+
+       (compared using ==)
+     # ./spec/controllers/posts_controller_spec.rb:67:in `block (3 levels) in <top (required)>'
+
+Finished in 0.92405 seconds (files took 8.48 seconds to load)
+11 examples, 1 failure
+
+Failed examples:
+
+rspec ./spec/controllers/posts_controller_spec.rb:65 # PostsController GET #show assigns post to @post
+```
+
+Define `show` method in posts_controller.rb
+
+```ruby
+class PostsController < ApplicationController
+  ...
+
+  def show
+    @post = Post.find(params[:id])
+  end
+end
+```
+
+Run RSpec posts_controller_spec.rb
+
+```
+$ rspec spec/controllers
+..........F
+
+Failures:
+
+  1) PostsController GET #show assigns post to @post
+     Failure/Error: expect(assigns(:post)).to eq(@post)
+
+       expected: #<Post id: 11, title: "title", body: "body", created_at: "2015-10-23 06:41:33", updated_at: "2015-10-23 06:41:33">
+            got: nil
+
+       (compared using ==)
+     # ./spec/controllers/posts_controller_spec.rb:67:in `block (3 levels) in <top (required)>'
+
+Finished in 1.16 seconds (files took 8.16 seconds to load)
+11 examples, 1 failure
+
+Failed examples:
+
+rspec ./spec/controllers/posts_controller_spec.rb:65 # PostsController GET #show assigns post to @post
+```
+
+Write call to `get :show` with association to id to make unit test pass in post_controller_spec.rb
+
+```ruby
+describe "GET #show" do
+  ...
+
+  it "assigns post to @post" do
+    get :show, {id: @post.id}
+    expect(assigns(:post)).to eq(@post)
+  end
+end
+```
+
+Run RSpec posts_controller_spec.rb
+
+```
+$ rspec spec/controllers
+...........
+
+Finished in 1.39 seconds (files took 9.01 seconds to load)
+11 examples, 0 failures
+```
+
+Write unit test expecting http success for edit in post_controller_spec.rb
+
+```ruby
+RSpec.describe PostsController, type: :controller do
+  ...
+
+  describe "GET #edit" do
+    it "returns http success" do
+      expect(response).to have_http_status(:success)
+    end
+  end
+end
+```
+
+Run RSpec posts_controller_spec.rb
+
+```
+$ rspec spec/controllers
+............
+
+Finished in 1.25 seconds (files took 8.25 seconds to load)
+12 examples, 0 failures
+```
+
+Write unit test expecting to render the edit view for edit in post_controller_spec.rb
+
+```ruby
+describe "GET #edit" do
+  ...
+
+  it "renders the edit view" do
+    expect(response).to render_template :edit
+  end
+end
+```
+
+Run RSpec posts_controller_spec.rb
+
+```
+$ rspec spec/controllers
+............F
 
 Failures:
 
@@ -611,73 +1122,129 @@ Failures:
        expecting <"edit"> but rendering with <[]>
      # ./spec/controllers/posts_controller_spec.rb:79:in `block (3 levels) in <top (required)>'
 
-Finished in 0.20101 seconds (files took 7.15 seconds to load)
-10 examples, 1 failure
+Finished in 1.31 seconds (files took 8.27 seconds to load)
+13 examples, 1 failure
 
 Failed examples:
 
-rspec ./spec/controllers/posts_controller_spec.rb:78 # PostsController GET #edit renders the edit view
+rspec ./spec/controllers/posts_controller_spec.rb:77 # PostsController GET #edit renders the edit view
 ```
 
-Write code to pass unit test in post_controller_spec.rb
+Write call to `get :edit` with association to id to make unit test pass in post_controller_spec.rb
 
 ```ruby
-get :edit, {id: @post.id}
-```
+describe "GET #edit" do
+  ...
 
-Run RSpec posts_controller_spec.rb
-
-```
-$ rspec spec/controllers/posts_controller_spec.rb
-..........
-
-Finished in 0.19201 seconds (files took 7.19 seconds to load)
-10 examples, 0 failures
-```
-
-Write unit test in post_controller_spec.rb
-
-```ruby
-it "assigns post to be updated to @post" do
-  expect(post_instance.id).to eq @post.id
-  expect(post_instance.title).to eq @post.title
-  expect(post_instance.body).to eq @post.body
+  it "renders the edit view" do
+    get :edit
+    expect(response).to render_template :edit
+  end
 end
 ```
 
 Run RSpec posts_controller_spec.rb
 
 ```
-$ rspec spec/controllers/posts_controller_spec.rb
-..........F
+$ rspec spec/controllers
+............F
+
+Failures:
+
+  1) PostsController GET #edit renders the edit view
+     Failure/Error: get :edit
+     ActionController::UrlGenerationError:
+       No route matches {:action=>"edit", :controller=>"posts"}
+     # ./spec/controllers/posts_controller_spec.rb:78:in `block (3 levels) in <top (required)>'
+
+Finished in 1.37 seconds (files took 8.34 seconds to load)
+13 examples, 1 failure
+
+Failed examples:
+
+rspec ./spec/controllers/posts_controller_spec.rb:77 # PostsController GET #edit renders the edit view
+```
+
+Input `get  "posts/:id/edit" => "posts#edit"` route in routes.rb to make failing test for no route matches, pass
+
+```ruby
+Rails.application.routes.draw do
+  get  "posts" => "posts#index"
+  get  "posts/new" => "posts#new"
+  post "posts" => "posts#create"
+  get  "posts/:id" => "posts#show", as: "post"
+  get  "posts" => "posts#show"
+  get  "posts/edit"
+end
+```
+
+Run RSpec posts_controller_spec.rb
+
+```
+$ rspec spec/controllers
+.............
+
+Finished in 1.26 seconds (files took 9.13 seconds to load)
+13 examples, 0 failures
+```
+
+Write unit test assigning post to be updated to @post for GET #edit in post_controller_spec.rb
+
+```ruby
+describe "GET #edit" do
+  ...
+
+  it "assigns post to be updated to @post" do
+    expect(post_instance.id).to eq @post.id
+    expect(post_instance.title).to eq @post.title
+    expect(post_instance.body).to eq @post.body
+  end
+end
+```
+
+Run RSpec posts_controller_spec.rb
+
+```
+$ rspec spec/controllers
+.............F
 
 Failures:
 
   1) PostsController GET #edit assigns post to be updated to @post
      Failure/Error: expect(post_instance.id).to eq @post.id
      NameError:
-       undefined local variable or method `post_instance' for #<RSpec::ExampleGroups::PostsController::GETEdit:0x5995c38>
-     # ./spec/controllers/posts_controller_spec.rb:84:in `block (3 levels) in <top (required)>'
+       undefined local variable or method `post_instance' for #<RSpec::ExampleGroups::PostsController::GETEdit:0x00000006bdaff0>
+     # ./spec/controllers/posts_controller_spec.rb:86:in `block (3 levels) in <top (required)>'
 
-Finished in 0.18801 seconds (files took 7.44 seconds to load)
-11 examples, 1 failure
+Finished in 1.69 seconds (files took 9 seconds to load)
+14 examples, 1 failure
 
 Failed examples:
 
-rspec ./spec/controllers/posts_controller_spec.rb:83 # PostsController GET #edit assigns post to be updated to @post
+rspec ./spec/controllers/posts_controller_spec.rb:82 # PostsController GET #edit assigns post to be updated to @post
 ```
 
-Define post_instance
+Define post_instance in unit test for GET #edit in post_controller_spec.rb
 
 ```ruby
-post_instance = assigns(:post)
+describe "GET #edit" do
+  ...
+
+  it "assigns post to be updated to @post" do
+    post_instance = assigns(:post)
+
+    expect(post_instance.id).to eq @post.id
+    expect(post_instance.title).to eq @post.title
+    expect(post_instance.body).to eq @post.body
+  end
+end
 ```
 
 Run RSpec posts_controller_spec.rb
 
 ```
-$ rspec spec/controllers/posts_controller_spec.rb
-..........F
+$ rspec spec/controllers
+.............F
 
 Failures:
 
@@ -687,50 +1254,109 @@ Failures:
        undefined method `id' for nil:NilClass
      # ./spec/controllers/posts_controller_spec.rb:86:in `block (3 levels) in <top (required)>'
 
-Finished in 0.20401 seconds (files took 7.56 seconds to load)
-11 examples, 1 failure
+Finished in 2.43 seconds (files took 8.26 seconds to load)
+14 examples, 1 failure
 
 Failed examples:
 
-rspec ./spec/controllers/posts_controller_spec.rb:83 # PostsController GET #edit assigns post to be updated to @post
+rspec ./spec/controllers/posts_controller_spec.rb:82 # PostsController GET #edit assigns post to be updated to @post
 ```
 
-Write code to pass unit test in post_controller_spec.rb
+Define `edit` method in posts_controller.rb
 
 ```ruby
-get :edit, {id: @post.id}
-```
+class PostsController < ApplicationController
+  ...
 
-Run RSpec posts_controller_spec.rb
-
-```
-$ rspec spec/controllers/posts_controller_spec.rb
-...........
-
-Finished in 0.18901 seconds (files took 7.2 seconds to load)
-11 examples, 0 failures
-```
-
-Write unit test for update in post_controller_spec.rb
-
-```ruby
-it "updates post with expected attributes" do
-  new_title = "New Title"
-  new_body = "New Body"
-
-  put :update, id: @post.id, post: {title: new_title, body: new_body}
-
-  updated_post = assigns(:post)
-  expect(updated_post.id).to eq @post.id
-  expect(updated_post.title).to eq new_title
-  expect(updated_post.body).to eq new_body
+  def edit
+    @post = Post.find(params[:id])
+  end
 end
 ```
 
 Run RSpec posts_controller_spec.rb
 
 ```
-$ rspec spec/controllers/posts_controller_spec.rb
+$ rspec spec/controllers
+............FF
+
+Failures:
+
+  1) PostsController GET #edit renders the edit view
+     Failure/Error: get :edit
+     ActiveRecord::RecordNotFound:
+       Couldn't find Post with 'id'=
+     # ./app/controllers/posts_controller.rb:29:in `edit'
+     # ./spec/controllers/posts_controller_spec.rb:78:in `block (3 levels) in <top (required)>'
+
+  2) PostsController GET #edit assigns post to be updated to @post
+     Failure/Error: expect(post_instance.id).to eq @post.id
+     NoMethodError:
+       undefined method `id' for nil:NilClass
+     # ./spec/controllers/posts_controller_spec.rb:86:in `block (3 levels) in <top (required)>'
+
+Finished in 1.37 seconds (files took 8.07 seconds to load)
+14 examples, 2 failures
+
+Failed examples:
+
+rspec ./spec/controllers/posts_controller_spec.rb:77 # PostsController GET #edit renders the edit view
+rspec ./spec/controllers/posts_controller_spec.rb:82 # PostsController GET #edit assigns post to be updated to @post
+```
+
+Write call to `get :show` with association to id to make unit test pass in post_controller_spec.rb
+
+```ruby
+describe "GET #edit" do
+  ...
+
+  it "renders the edit view" do
+    get :edit, {id: @post.id}
+    expect(response).to render_template :edit
+  end
+
+  it "assigns post to be updated to @post" do
+    get :edit, {id: @post.id}
+    post_instance = assigns(:post)
+
+    expect(post_instance.id).to eq @post.id
+    expect(post_instance.title).to eq @post.title
+    expect(post_instance.body).to eq @post.body
+  end
+end
+```
+
+Run RSpec posts_controller_spec.rb
+
+```
+$ rspec spec/controllers
+..............
+
+Finished in 1.39 seconds (files took 8.55 seconds to load)
+14 examples, 0 failures
+```
+
+Write unit test expecting updating a post with expected attributes for GET #update in post_controller_spec.rb
+
+```ruby
+RSpec.describe PostsController, type: :controller do
+  ...
+
+  describe "GET #update" do
+    it "updates post with expected attributes" do
+      updated_post = assigns(:post)
+      expect(updated_post.id).to eq @post.id
+      expect(updated_post.title).to eq new_title
+      expect(updated_post.body).to eq new_body
+    end
+  end
+end
+```
+
+Run RSpec posts_controller_spec.rb
+
+```
+$ rspec spec/controllers
 ..............F
 
 Failures:
@@ -741,7 +1367,7 @@ Failures:
        undefined method `id' for nil:NilClass
      # ./spec/controllers/posts_controller_spec.rb:100:in `block (3 levels) in <top (required)>'
 
-Finished in 0.26301 seconds (files took 7.23 seconds to load)
+Finished in 1.51 seconds (files took 8.23 seconds to load)
 15 examples, 1 failure
 
 Failed examples:
@@ -749,20 +1375,17 @@ Failed examples:
 rspec ./spec/controllers/posts_controller_spec.rb:93 # PostsController GET #update updates post with expected attributes
 ```
 
-Write code for update
+Write call to `put :update` to make unit test pass for GET #update in post_controller_spec.rb
 
 ```ruby
-def update
-  @post = Post.find(params[:id])
-  @post.title = params[:post][:title]
-  @post.body = params[:post][:body]
+describe "GET #update" do
+  it "updates post with expected attributes" do
+    put :update
 
-  if @post.save
-    flash[:notice] = "Post was updated."
-    redirect_to @post
-  else
-    flash[:error] = "There was an error saving the post. Please try again."
-    render :edit
+    updated_post = assigns(:post)
+    expect(updated_post.id).to eq @post.id
+    expect(updated_post.title).to eq new_title
+    expect(updated_post.body).to eq new_body
   end
 end
 ```
@@ -770,42 +1393,246 @@ end
 Run RSpec posts_controller_spec.rb
 
 ```
-$ rspec spec/controllers/posts_controller_spec.rb
-...............
+$ rspec spec/controllers
+..............F
 
-Finished in 0.24401 seconds (files took 7.12 seconds to load)
-15 examples, 0 failures
+Failures:
+
+  1) PostsController GET #update updates post with expected attributes
+     Failure/Error: put :update
+     ActionController::UrlGenerationError:
+       No route matches {:action=>"update", :controller=>"posts"}
+     # ./spec/controllers/posts_controller_spec.rb:97:in `block (3 levels) in <top (required)>'
+
+Finished in 1.39 seconds (files took 8.26 seconds to load)
+15 examples, 1 failure
+
+Failed examples:
+
+rspec ./spec/controllers/posts_controller_spec.rb:93 # PostsController GET #update updates post with expected attributes
 ```
 
-Write unit test in post_controller_spec.rb
+Input `get  "posts" => "posts#update"` route in routes.rb to make failing test for no route matches, pass
 
 ```ruby
-it "redirects to the updated post" do
-  new_title = "New Title"
-  new_body = "New Body"
-
-  put :update, id: @post.id, post: {title: new_title, body: new_body}
-  expect(response).to redirect_to @post
+Rails.application.routes.draw do
+  get  "posts" => "posts#index"
+  get  "posts/new" => "posts#new"
+  post "posts" => "posts#create"
+  get  "posts/:id" => "posts#show", as: "post"
+  get  "posts" => "posts#show"
+  get  "posts/edit"
+  get  "posts" => "posts#update"
 end
 ```
 
 Run RSpec posts_controller_spec.rb
 
 ```
-$ rspec spec/controllers/posts_controller_spec.rb
+$ rspec spec/controllers
+..............F
+
+Failures:
+
+  1) PostsController GET #update updates post with expected attributes
+     Failure/Error: expect(updated_post.id).to eq @post.id
+     NoMethodError:
+       undefined method `id' for nil:NilClass
+     # ./spec/controllers/posts_controller_spec.rb:100:in `block (3 levels) in <top (required)>'
+
+Finished in 1.47 seconds (files took 8.15 seconds to load)
+15 examples, 1 failure
+
+Failed examples:
+
+rspec ./spec/controllers/posts_controller_spec.rb:93 # PostsController GET #update updates post with expected attributes
+```
+
+Associate id with post.id in unit test for GET #update in post_controller_spec.rb
+
+```ruby
+describe "GET #update" do
+  it "updates post with expected attributes" do
+    put :update, id: @post.id
+
+    updated_post = assigns(:post)
+    expect(updated_post.id).to eq @post.id
+    expect(updated_post.title).to eq new_title
+    expect(updated_post.body).to eq new_body
+  end
+end
+```
+
+Run RSpec posts_controller_spec.rb
+
+```
+$ rspec spec/controllers
+..............F
+
+Failures:
+
+  1) PostsController GET #update updates post with expected attributes
+     Failure/Error: expect(updated_post.id).to eq @post.id
+     NoMethodError:
+       undefined method `id' for nil:NilClass
+     # ./spec/controllers/posts_controller_spec.rb:100:in `block (3 levels) in <top (required)>'
+
+Finished in 1.51 seconds (files took 8.32 seconds to load)
+15 examples, 1 failure
+
+Failed examples:
+
+rspec ./spec/controllers/posts_controller_spec.rb:93 # PostsController GET #update updates post with expected attributes
+```
+
+Define `update` method in posts_controller.rb
+
+```ruby
+class PostsController < ApplicationController
+  ...
+
+  def update
+    @post = Post.find(params[:id])
+    @post.title = params[:post][:title]
+    @post.body = params[:post][:body]
+
+    if @post.save
+      flash[:notice] = "Post was updated."
+      redirect_to @post
+    else
+      flash[:error] = "There was an error saving the post. Please try again."
+      render :edit
+    end
+  end
+end
+```
+
+Run RSpec posts_controller_spec.rb
+
+```
+$ rspec spec/controllers
+..............F
+
+Failures:
+
+  1) PostsController GET #update updates post with expected attributes
+     Failure/Error: put :update, id: @post.id
+     NoMethodError:
+       undefined method `[]' for nil:NilClass
+     # ./app/controllers/posts_controller.rb:34:in `update'
+     # ./spec/controllers/posts_controller_spec.rb:97:in `block (3 levels) in <top (required)>'
+
+Finished in 1.72 seconds (files took 8.61 seconds to load)
+15 examples, 1 failure
+
+Failed examples:
+
+rspec ./spec/controllers/posts_controller_spec.rb:93 # PostsController GET #update updates post with expected attributes
+```
+
+Set post in unit test in post_controller_spec.rb
+
+```ruby
+describe "GET #update" do
+  it "updates post with expected attributes" do
+    put :update, id: @post.id, post: {title: new_title, body: new_body}
+
+    updated_post = assigns(:post)
+    expect(updated_post.id).to eq @post.id
+    expect(updated_post.title).to eq new_title
+    expect(updated_post.body).to eq new_body
+  end
+end
+```
+
+Run RSpec posts_controller_spec.rb
+
+```
+$ rspec spec/controllers
+..............F
+
+Failures:
+
+  1) PostsController GET #update updates post with expected attributes
+     Failure/Error: put :update, id: @post.id, post: {title: new_title, body: new_body}
+     NameError:
+       undefined local variable or method `new_title' for #<RSpec::ExampleGroups::PostsController::GETUpdate:0x000000054df0f8>
+     # ./spec/controllers/posts_controller_spec.rb:97:in `block (3 levels) in <top (required)>'
+
+Finished in 1.22 seconds (files took 8.32 seconds to load)
+15 examples, 1 failure
+
+Failed examples:
+
+rspec ./spec/controllers/posts_controller_spec.rb:93 # PostsController GET #update updates post with expected attributes
+```
+
+Define new_title and new_body variables in unit test for GET #update in post_controller_spec.rb
+
+```ruby
+describe "GET #update" do
+  it "updates post with expected attributes" do
+    new_title = "New Title"
+    new_body = "New Body"
+
+    put :update, id: @post.id, post: {title: new_title, body: new_body}
+
+    updated_post = assigns(:post)
+    expect(updated_post.id).to eq @post.id
+    expect(updated_post.title).to eq new_title
+    expect(updated_post.body).to eq new_body
+  end
+end
+```
+
+Run RSpec posts_controller_spec.rb
+
+```
+$ rspec spec/controllers
+...............
+
+Finished in 1.87 seconds (files took 8.45 seconds to load)
+15 examples, 0 failures
+```
+
+Write unit test expecting a redirect to the updated post for GET #update in post_controller_spec.rb
+
+```ruby
+describe "GET #update" do
+  ...
+
+  it "redirects to the updated post" do
+    new_title = "New Title"
+    new_body = "New Body"
+
+    put :update, id: @post.id, post: {title: new_title, body: new_body}
+    expect(response).to redirect_to @post
+  end
+end
+```
+
+Run RSpec posts_controller_spec.rb
+
+```
+$ rspec spec/controllers
 ................
 
-Finished in 0.25301 seconds (files took 7.23 seconds to load)
+Finished in 3.89 seconds (files took 8.6 seconds to load)
 16 examples, 0 failures
 ```
 
-Write unit test for destroy in post_controller_spec.rb
+Write unit test expecting a post to be deleted for GET #destroy in post_controller_spec.rb
 
 ```ruby
-it "deletes the post" do
-  delete :destroy, {id: @post.id}
-  count = Post.where({id: @post.id}).size
-  expect(count).to eq 0
+RSpec.describe PostsController, type: :controller do
+  ...
+
+  describe "GET #destroy" do
+    it "deletes the post" do
+      count = Post.where({id: @post.id}).size
+      expect(count).to eq 0
+    end
+  end
 end
 ```
 
@@ -834,7 +1661,79 @@ Failed examples:
 rspec ./spec/controllers/posts_controller_spec.rb:115 # PostsController GET #destroy deletes the post
 ```
 
-Write code to pass unit test in posts_controller.rb
+```ruby
+describe "GET #destroy" do
+  it "deletes the post" do
+    delete :destroy
+    count = Post.where({id: @post.id}).size
+    expect(count).to eq 0
+  end
+end
+```
+
+Run RSpec posts_controller_spec.rb
+
+```
+$ rspec spec/controllers
+................F
+
+Failures:
+
+  1) PostsController GET #destroy deletes the post
+     Failure/Error: delete :destroy, {id: @post.id}
+     ActionController::UrlGenerationError:
+       No route matches {:action=>"destroy", :controller=>"posts", :id=>"11"}
+     # ./spec/controllers/posts_controller_spec.rb:116:in `block (3 levels) in <top (required)>'
+
+Finished in 1.47 seconds (files took 8.18 seconds to load)
+17 examples, 1 failure
+
+Failed examples:
+
+rspec ./spec/controllers/posts_controller_spec.rb:115 # PostsController GET #destroy deletes the post
+```
+
+Input `delete  "posts/:id" => "posts#destroy"` route in routes.rb to make failing test for no route matches, pass
+
+```ruby
+Rails.application.routes.draw do
+  get     "posts" => "posts#index"
+  get     "posts/new" => "posts#new"
+  post    "posts" => "posts#create"
+  get     "posts/:id" => "posts#show", as: "post"
+  get     "posts" => "posts#show"
+  get     "posts/edit"
+  get     "posts" => "posts#update"
+  delete  "posts/:id" => "posts#destroy"
+end
+```
+
+Run RSpec posts_controller_spec.rb
+
+```
+$ rspec spec/controllers
+................F
+
+Failures:
+
+  1) PostsController GET #destroy deletes the post
+     Failure/Error: expect(count).to eq 0
+
+       expected: 0
+            got: 1
+
+       (compared using ==)
+     # ./spec/controllers/posts_controller_spec.rb:118:in `block (3 levels) in <top (required)>'
+
+Finished in 1.76 seconds (files took 8.39 seconds to load)
+17 examples, 1 failure
+
+Failed examples:
+
+rspec ./spec/controllers/posts_controller_spec.rb:115 # PostsController GET #destroy deletes the post
+```
+
+Define `destroy` method in posts_controller.rb
 
 ```ruby
 def destroy
@@ -853,28 +1752,50 @@ end
 Run RSpec posts_controller_spec.rb
 
 ```
-$ rspec spec/controllers/posts_controller_spec.rb
+$ rspec spec/controllers
 .................
 
-Finished in 0.26502 seconds (files took 7.12 seconds to load)
+Finished in 1.61 seconds (files took 8.57 seconds to load)
 17 examples, 0 failures
 ```
 
-Write unit test in post_controller_spec.rb
+Write unit test expecting a redirect to posts index after a successful deletion for GET #destroy in post_controller_spec.rb
 
 ```ruby
-it "redirects to posts index" do
-  delete :destroy, {id: @post.id}
-  expect(response).to redirect_to posts_path
+describe "GET #destroy" do
+  ...
+
+  it "redirects to posts index" do
+    delete :destroy, {id: @post.id}
+    expect(response).to redirect_to posts_path
+  end
 end
 ```
 
 Run RSpec posts_controller_spec.rb
 
 ```
-$ rspec spec/controllers/posts_controller_spec.rb
+$ rspec spec/controllers
 ..................
 
-Finished in 0.27902 seconds (files took 7.2 seconds to load)
+Finished in 1.86 seconds (files took 9.31 seconds to load)
+18 examples, 0 failures
+```
+
+Refactor routes.rb
+
+```ruby
+Rails.application.routes.draw do
+  resources :posts
+end
+```
+
+Run RSpec posts_controller_spec.rb to confirm tests still pass
+
+```
+$ rspec spec/controllers
+..................
+
+Finished in 5.13 seconds (files took 9.42 seconds to load)
 18 examples, 0 failures
 ```
